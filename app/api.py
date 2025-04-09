@@ -4,9 +4,16 @@ from .services import NotificationService
 
 router = APIRouter()
 
+user_subscriptions = {}
+
 @router.post("/subscribe")
 async def subscribe(subscription: Subscription):
     # Example: You can save subscription info in DB (omitted for simplicity)
+    user_id = subscription.user_id
+    groups = subscription.topics
+
+    user_subscriptions[user_id] = groups
+
     return {"status": "subscribed", "user_id": subscription.user_id, "topics": subscription.topics}
 
 @router.post("/send-notification")

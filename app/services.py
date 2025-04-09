@@ -9,5 +9,18 @@ class NotificationService:
 
     @staticmethod
     async def publish(notification: dict):
-        await redis_client.publish(NotificationService.CHANNEL, json.dumps(notification))
+        notif_type = notification["type"]
+        target = notification.get("target")
+        message = notification["message"]
+
+        channel = {
+            "user": f"user:{target}",
+            "group": f"group:{target}",
+            "broadcast": "broadcast"
+        }.get(notif_type)
+
+        if not channel:
+            return
+
+        await redis_client.publish(channel, message)
         logger.info(f"Published: {notification}")

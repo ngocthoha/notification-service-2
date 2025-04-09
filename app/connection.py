@@ -1,6 +1,12 @@
+import asyncio
+
 from fastapi import WebSocket
 from collections import defaultdict
 from loguru import logger
+
+from app.api import user_subscriptions
+from app.websocket import redis_listener
+
 
 class ConnectionManager:
     def __init__(self):
@@ -10,8 +16,12 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket, user_id: str, user_topics: list[str]):
         await websocket.accept()
         self.active_connections[user_id] = websocket
-        for topic in user_topics:
-            self.topics[topic].add(user_id)
+        self.topics = user_subscriptions.get(user_id, [])
+
+        channels = [f"user:{user_id}"] + [f"group:{gid}" for gid in self.topics] + ["broadcast"]
+        task = asyncio.create_task(redis_listener(channels, websocket))
+
+
         logger.info(f"{user_id} connected with topics: {user_topics}")
 
     async def disconnect(self, user_id: str):
