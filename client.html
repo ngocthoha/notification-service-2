@@ -6,7 +6,7 @@
 </head>
 <body>
 <script>
-  const ws = new WebSocket("ws://localhost:8001/ws/notifications?user_id=user123&topics=topic1,topic2");
+  const ws = new WebSocket("ws://localhost:8002/ws/notifications?user_id=user123&topics=topic1,topic2");
 
   ws.onopen = () => {
     console.log("WebSocket connected");

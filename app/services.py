@@ -9,18 +9,13 @@ class NotificationService:
 
     @staticmethod
     async def publish(notification: dict):
-        notif_type = notification["type"]
-        target = notification.get("target")
-        message = notification["message"]
+        if notification["broadcast"]:
+            await redis_client.publish("broadcast", json.dumps(notification))
+        elif notification["topics"]:
+            for topic in notification["topics"]:
+                await redis_client.publish(f"group:{topic}", json.dumps(notification))
+        else:
+            for user in notification["recipient_ids"]:
+                await redis_client.publish(f"user:{user}", json.dumps(notification))
 
-        channel = {
-            "user": f"user:{target}",
-            "group": f"group:{target}",
-            "broadcast": "broadcast"
-        }.get(notif_type)
-
-        if not channel:
-            return
-
-        await redis_client.publish(channel, message)
         logger.info(f"Published: {notification}")
